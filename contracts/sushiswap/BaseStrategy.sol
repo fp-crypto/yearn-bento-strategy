@@ -22,7 +22,13 @@ abstract contract BaseStrategy is IStrategy, BoringOwnable {
     mapping(address => bool) public strategyExecutors;
     mapping(bytes32 => bool) public allowedPaths;
 
-    event LogConvert(address indexed server, address indexed token0, address indexed token1, uint256 amount0, uint256 amount1);
+    event LogConvert(
+        address indexed server,
+        address indexed token0,
+        address indexed token1,
+        uint256 amount0,
+        uint256 amount1
+    );
     event LogToggleStrategyExecutor(address indexed executor, bool allowed);
 
     /** @param _underlying Token the strategy invests.
@@ -48,13 +54,19 @@ abstract contract BaseStrategy is IStrategy, BoringOwnable {
     }
 
     modifier onlyBentobox() {
-        require(msg.sender == address(bentoBox), "BentoBox Strategy: only bento");
+        require(
+            msg.sender == address(bentoBox),
+            "BentoBox Strategy: only bento"
+        );
         require(!exited, "BentoBox Strategy: exited");
         _;
     }
 
     modifier onlyExecutor() {
-        require(strategyExecutors[msg.sender], "BentoBox Strategy: only executor");
+        require(
+            strategyExecutors[msg.sender],
+            "BentoBox Strategy: only executor"
+        );
         _;
     }
 
@@ -94,21 +106,35 @@ abstract contract BaseStrategy is IStrategy, BoringOwnable {
 
     /// @inheritdoc IStrategy
     /// @dev Only BentoBox can call harvest on this strategy.
-    function harvest(uint256 balance, address sender) external override onlyBentobox returns (int256) {
+    function harvest(uint256 balance, address sender)
+        external
+        override
+        onlyBentobox
+        returns (int256)
+    {
         /** @dev Ensures that (1) the caller was this contract (called through the safeHarvest function)
 		        and (2) that we are not being frontrun by a large BentoBox deposit when harvesting profits.
 		    @dev Don't revert if conditions aren't met in order to allow
 		        BentoBox to continiue execution as it might need to do a rebalance. */
-        if (sender == address(this) && IBentoBoxMinimal(bentoBox).totals(address(underlying)).elastic <= maxBentoBoxBalance) {
+        if (
+            sender == address(this) &&
+            IBentoBoxMinimal(bentoBox).totals(address(underlying)).elastic <=
+            maxBentoBoxBalance
+        ) {
             /** @dev We might also have some underlying tokens in the contract from before so the amount
                 returned by the internal _harvest function isn't necessary the final profit/loss amount */
             int256 amount = _harvest(balance);
 
-            uint256 contractBalance = IERC20(underlying).safeBalanceOf(address(this));
+            uint256 contractBalance =
+                IERC20(underlying).safeBalanceOf(address(this));
 
             if (amount >= 0) {
                 // we made some profit
-                if (contractBalance > 0) IERC20(underlying).safeTransfer(address(bentoBox), contractBalance);
+                if (contractBalance > 0)
+                    IERC20(underlying).safeTransfer(
+                        address(bentoBox),
+                        contractBalance
+                    );
                 return int256(contractBalance);
             } else if (contractBalance > 0) {
                 // we might have made a loss
@@ -117,7 +143,10 @@ abstract contract BaseStrategy is IStrategy, BoringOwnable {
                 if (diff > 0) {
                     // we still made some profit
                     _skim(uint256(-amount));
-                    IERC20(underlying).safeTransfer(address(bentoBox), uint256(diff));
+                    IERC20(underlying).safeTransfer(
+                        address(bentoBox),
+                        uint256(diff)
+                    );
                     return diff;
                 } else {
                     // we made a loss but we have some tokens we can reinvest
@@ -140,10 +169,18 @@ abstract contract BaseStrategy is IStrategy, BoringOwnable {
     /// @param balance The amount of tokens that have been invested.
     /// @return amountAdded The delta (+profit or -loss) that occured in contrast to `balance`.
     /// @dev amountAdded can be left at 0 when reporting profits (gas savings).
-    function _harvest(uint256 balance) internal virtual returns (int256 amountAdded);
+    function _harvest(uint256 balance)
+        internal
+        virtual
+        returns (int256 amountAdded);
 
     /// @inheritdoc IStrategy
-    function withdraw(uint256 amount) external override onlyBentobox returns (uint256 actualAmount) {
+    function withdraw(uint256 amount)
+        external
+        override
+        onlyBentobox
+        returns (uint256 actualAmount)
+    {
         _withdraw(amount);
         /// @dev Make sure we send and report the exact same amount of tokens by using balanceOf.
         actualAmount = IERC20(underlying).safeBalanceOf(address(this));
@@ -155,7 +192,12 @@ abstract contract BaseStrategy is IStrategy, BoringOwnable {
     function _withdraw(uint256 amount) internal virtual;
 
     /// @inheritdoc IStrategy
-    function exit(uint256 balance) external override onlyBentobox returns (int256 amountAdded) {
+    function exit(uint256 balance)
+        external
+        override
+        onlyBentobox
+        returns (int256 amountAdded)
+    {
         _exit();
         /// @dev Check balance of token on the contract.
         uint256 actualBalance = IERC20(underlying).safeBalanceOf(address(this));
@@ -181,5 +223,4 @@ abstract contract BaseStrategy is IStrategy, BoringOwnable {
         require(exited, "BentoBox Strategy: not exited");
         (success, ) = to.call{value: value}(data);
     }
-
 }

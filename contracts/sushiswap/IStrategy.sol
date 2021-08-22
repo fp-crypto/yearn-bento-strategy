@@ -10,7 +10,9 @@ interface IStrategy {
     /// @param balance The amount of tokens the caller thinks it has invested.
     /// @param sender The address of the initiator of this transaction. Can be used for reimbursements, etc.
     /// @return amountAdded The delta (+profit or -loss) that occured in contrast to `balance`.
-    function harvest(uint256 balance, address sender) external returns (int256 amountAdded);
+    function harvest(uint256 balance, address sender)
+        external
+        returns (int256 amountAdded);
 
     /// @notice Withdraw assets. The returned amount can differ from the requested amount due to rounding.
     /// @dev The `actualAmount` should be very close to the amount.
