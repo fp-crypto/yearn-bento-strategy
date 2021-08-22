@@ -52,4 +52,12 @@ contract YearnVaultStrategy is YearnBaseWrapper, BentoBaseStrategy {
     function _exit() internal override {
         _withdraw(type(uint256).max);
     }
+
+    function migrate(uint256 amount, uint256 maxMigrationLoss)
+        external
+        onlyOwner
+        returns (uint256)
+    {
+        return super._migrate(address(this), amount, maxMigrationLoss);
+    }
 }
