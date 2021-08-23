@@ -46,7 +46,7 @@ contract YearnVaultStrategy is YearnBaseWrapper, BentoBaseStrategy {
     }
 
     function _withdraw(uint256 amount) internal override {
-        super._withdraw(address(this), address(this), amount, false);
+        super._withdraw(address(this), address(this), amount, true);
     }
 
     function _exit() internal override {
