@@ -18,9 +18,7 @@ contract YearnVaultStrategy is YearnBaseWrapper, BentoBaseStrategy {
         IERC20 _underlying,
         address _yRegistry,
         IBentoBoxMinimal _bentoBox,
-        address _strategyExecutor,
-        address _factory,
-        address[][] memory paths
+        address _strategyExecutor
     )
         public
         YearnBaseWrapper(address(_underlying), _yRegistry)
@@ -28,8 +26,8 @@ contract YearnVaultStrategy is YearnBaseWrapper, BentoBaseStrategy {
             _underlying,
             _bentoBox,
             _strategyExecutor,
-            _factory,
-            paths
+            address(0), // no rewards, so factory is not needed
+            new address[][](0) // no rewards, so no swap path
         )
     {}
 
