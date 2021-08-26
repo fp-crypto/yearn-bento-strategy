@@ -61,7 +61,7 @@ def bento_owner(accounts, bento_box):
 def bento_strategy(
     chain, YearnVaultStrategy, dai, yregistry, bento_box, strategist, bento_owner
 ):
-    strategy = strategist.deploy(
+    strategy = bento_owner.deploy(
         YearnVaultStrategy, dai, yregistry, bento_box, strategist
     )
 
@@ -72,6 +72,29 @@ def bento_strategy(
     assert bento_box.strategy(dai) == strategy
 
     yield strategy
+
+
+@pytest.fixture(scope="function")
+def old_vault(bento_strategy):
+    old_vault = "0x0000000000000000000000000000000000000000"
+    best_vault = old_vault = bento_strategy.bestVault()
+    for vault in bento_strategy.allVaults():
+        if vault != best_vault:
+            old_vault = vault
+    yield Contract(old_vault)
+
+
+@pytest.fixture(scope="function")
+def old_vault_deposit_amount(accounts, bento_strategy, old_vault, dai, dai_whale, ygov):
+    account = accounts.at(bento_strategy, force=True)
+    if old_vault == "0x0000000000000000000000000000000000000000":
+        yield 0
+    amount = 10_000e18
+    dai.transfer(account, amount, {"from": dai_whale})
+    dai.approve(old_vault, 2 ** 256 - 1, {"from": account})
+    old_vault.setDepositLimit(2 ** 256 - 1, {"from": ygov})
+    old_vault.deposit(amount, {"from": account})
+    yield amount
 
 
 @pytest.fixture(scope="session")
