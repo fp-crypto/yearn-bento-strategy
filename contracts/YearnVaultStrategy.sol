@@ -23,11 +23,13 @@ contract YearnVaultStrategy is YearnBaseWrapper, BentoBaseStrategy {
         public
         YearnBaseWrapper(address(_underlying), _yRegistry)
         BentoBaseStrategy(
-            _underlying,
-            _bentoBox,
-            _strategyExecutor,
-            address(0), // no rewards, so factory is not needed
-            new address[][](0) // no rewards, so no swap path
+            BentoBaseStrategy.BaseStrategyParams(
+                _underlying,
+                _bentoBox,
+                _strategyExecutor,
+                address(0), // no rewards, so factory is not needed
+                address(0)  // no rewards, no bridgeToken token
+            )
         )
     {}
 
@@ -40,7 +42,12 @@ contract YearnVaultStrategy is YearnBaseWrapper, BentoBaseStrategy {
         override
         returns (int256 amountAdded)
     {
-        return int256(super.totalVaultBalance(address(this))) - int256(balance);
+        amountAdded =
+            int256(super.totalVaultBalance(address(this))) -
+            int256(balance);
+        if (amountAdded > 0) {
+            _withdraw(uint256(amountAdded));
+        }
     }
 
     function _withdraw(uint256 amount) internal override {
