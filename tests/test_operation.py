@@ -155,3 +155,46 @@ def test_set_strategy_target_percentage_lower(
     assert (
         bento_box.strategyData(dai).dict()["balance"] / 1e18 < strategyDataBalanceBefore
     )
+
+
+def test_exit(
+    chain,
+    dai,
+    bento_box,
+    bento_strategy,
+    bento_owner,
+    strategist,
+    yregistry,
+    YearnVaultStrategy,
+    RELATIVE_APPROX,
+):
+    # start with 0 balance
+    strategyData = bento_box.strategyData(dai).dict()
+    assert strategyData["balance"] == 0
+
+    # Set target to 50% and harvest 1M dai
+    bento_box.setStrategyTargetPercentage(dai, 50, {"from": bento_owner})
+    bento_strategy.safeHarvest(
+        2 ** 256 - 1, True, 1_000_000e18, False, {"from": strategist}
+    )
+
+    before_balance = bento_strategy.totalVaultBalance(bento_strategy) / 1e18
+    strategyDataBalanceBefore = bento_box.strategyData(dai).dict()["balance"] / 1e18
+
+    assert before_balance > 0
+    assert (
+        pytest.approx(strategyDataBalanceBefore, rel=RELATIVE_APPROX) == before_balance
+    )
+
+    new_strategy = bento_owner.deploy(
+        YearnVaultStrategy, dai, yregistry, bento_box, strategist
+    )
+
+    bento_box.setStrategy(dai, new_strategy, {"from": bento_owner})
+    chain.sleep(2 * 7 * 24 * 3600 + 1)  # 2 week activation delay
+    chain.mine()
+    bento_box.setStrategy(dai, new_strategy, {"from": bento_owner})
+    assert bento_box.strategy(dai) == new_strategy
+
+    assert bento_strategy.totalVaultBalance(bento_strategy) == 0
+    assert bento_box.strategyData(dai).dict()["balance"] / 1e18 == 0
