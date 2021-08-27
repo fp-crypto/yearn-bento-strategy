@@ -46,6 +46,7 @@ def test_migration(
     bento_strategy,
     bento_owner,
     strategist,
+    old_vault,
     old_vault_deposit_amount,
     RELATIVE_APPROX,
 ):
@@ -55,13 +56,15 @@ def test_migration(
 
     # Set target to 50% and harvest 1M dai
     bento_box.setStrategyTargetPercentage(dai, 50, {"from": bento_owner})
-    bento_strategy.safeHarvest(2 ** 256 - 1, True, 1_000_000e18, False, {"from": strategist})
+    bento_strategy.safeHarvest(0, True, 1_000_000e18, False, {"from": strategist})
 
     best_vault = Contract(bento_strategy.bestVault())
     best_vault_before_balance = (
         best_vault.balanceOf(bento_strategy) * best_vault.pricePerShare() / 1e18
     )
-    bento_strategy.migrate(old_vault_deposit_amount, 1e5, {"from": bento_owner})
+
+    assert old_vault.balanceOf(bento_strategy) > 0
+    bento_strategy.migrate(2**256-1, 1e5, {"from": bento_owner})
     assert (
         pytest.approx(
             best_vault.balanceOf(bento_strategy)
@@ -72,3 +75,4 @@ def test_migration(
         )
         == (best_vault_before_balance + old_vault_deposit_amount) / 1e18
     )
+    assert old_vault.balanceOf(bento_strategy) == 0
