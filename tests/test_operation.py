@@ -147,6 +147,7 @@ def test_set_strategy_target_percentage_lower(
         pytest.approx(strategyDataBalanceBefore, rel=RELATIVE_APPROX) == before_balance
     )
 
+    # turn down the strategy target percentage
     bento_box.setStrategyTargetPercentage(dai, 1, {"from": bento_owner})
     bento_strategy.safeHarvest(
         2 ** 256 - 1, True, 1_000_000e18, False, {"from": strategist}
@@ -186,10 +187,10 @@ def test_exit(
         pytest.approx(strategyDataBalanceBefore, rel=RELATIVE_APPROX) == before_balance
     )
 
+    # replace the current strategy with a new one to test exit
     new_strategy = bento_owner.deploy(
         YearnVaultStrategy, dai, yregistry, bento_box, strategist
     )
-
     bento_box.setStrategy(dai, new_strategy, {"from": bento_owner})
     chain.sleep(2 * 7 * 24 * 3600 + 1)  # 2 week activation delay
     chain.mine()
