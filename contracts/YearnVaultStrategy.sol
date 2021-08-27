@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
 import {BaseStrategy as BentoBaseStrategy} from "./sushiswap/BaseStrategy.sol";
 import "./sushiswap/IBentoBoxMinimal.sol";
 import "./boringcrypto/boring-solidity/libraries/BoringERC20.sol";
-import {VaultAPI} from "@yearnvaults/contracts/BaseStrategy.sol";
 import {
     BaseWrapper as YearnBaseWrapper
 } from "@yearnvaults/contracts/BaseWrapper.sol";
